@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "DPD",
+    "PEP",
+    "DPD"
+  ],
+  "key": {
+    "D": { "item": "minecraft:diamond" },
+    "P": { "item": "minecraft:ender_pearl" },
+    "E": { "item": "minecraft:emerald" }
+  },
+  "result": {
+    "id": "talismanofrepair:talisman_of_repair",
+    "count": 1
+  }
+}
