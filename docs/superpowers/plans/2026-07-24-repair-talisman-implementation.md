@@ -302,9 +302,10 @@ import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.item.ItemStack;
 
 public class TalismanOfRepair implements ModInitializer {
     public static final String MOD_ID = "talismanofrepair";
@@ -321,7 +322,8 @@ public class TalismanOfRepair implements ModInitializer {
     @Override
     public void onInitialize() {
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS)
-                .register(entries -> entries.add((ItemLike) TALISMAN_OF_REPAIR));
+                .register(entries -> entries.add(new ItemStack(TALISMAN_OF_REPAIR),
+                        CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS));
     }
 }
 ```
@@ -572,7 +574,8 @@ public final class RepairConfig {
                 net.neoforged.fml.config.ModConfig.Type.COMMON, RepairConfig.SPEC, MOD_ID);
 
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS)
-                .register(entries -> entries.add((ItemLike) TALISMAN_OF_REPAIR));
+                .register(entries -> entries.add(new ItemStack(TALISMAN_OF_REPAIR),
+                        CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS));
     }
 ```
 (Replace the whole method body with the above — the `ItemGroupEvents` line already exists from Task 2, just add the `ConfigTracker` line above it.)
