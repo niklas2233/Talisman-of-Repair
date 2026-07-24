@@ -2,7 +2,7 @@
 
 ## Summary
 
-A standalone (no ProjectE dependency) reimplementation of ProjectE's "Talisman of Repair" item, shipped as two independent mods — one for Fabric, one for NeoForge — targeting the current latest stable Minecraft release. The core repair logic mirrors ProjectE's actual `RepairTalisman.java` implementation, with one deliberate deviation: repairs cost XP levels (configurable, 0 = free), where the original is entirely free.
+A standalone (no ProjectE dependency) reimplementation of ProjectE's "Talisman of Repair" item, shipped as two independent mods — one for Fabric, one for NeoForge — targeting the current latest stable Minecraft release. The core repair logic mirrors ProjectE's actual `RepairTalisman.java` implementation, with one deliberate deviation: repairs cost XP levels (configurable, 0 = free), where the original is entirely free. Adds soft/optional support for the [Accessories](https://github.com/wisp-forest/accessories) trinket API (repairs equipped accessories too) and an in-game config screen (ModMenu + Cloth Config on Fabric, native on NeoForge) — matching the dependency/config pattern used in the user's `cobblemon-autobattle` mod.
 
 Reference: [`RepairTalisman.java`](https://github.com/sinkillerj/ProjectE/blob/master/src/main/java/moze_intel/projecte/gameObjs/items/RepairTalisman.java) and `ServerConfig.java` in [sinkillerj/ProjectE](https://github.com/sinkillerj/ProjectE).
 
@@ -63,7 +63,7 @@ Ported behavior from the real `RepairTalisman.java`, plus an XP cost layered on 
 3. **XP gate (deviation from original)**: read `xpLevelCost` from config.
    - `0` → skip this check entirely, always proceed (free, matches original behavior).
    - `> 0` → if `player.experienceLevel < xpLevelCost` (using level-based cost, matching how anvils spend levels), do nothing further this pass — the repair is skipped for this interval, but the cooldown from step 2 still applies (so it retries next interval). Otherwise, deduct `xpLevelCost` via `player.giveExperienceLevels(-xpLevelCost)` once for the whole pass (not per item), then proceed to step 4.
-4. **Repair scan**: iterate the player's main inventory + armor slots + offhand (vanilla `Inventory` fields — no capability/`IItemHandler` abstraction needed since Curios integration is explicitly out of scope). For each stack:
+4. **Repair scan**: iterate the player's main inventory + armor slots + offhand (vanilla `Inventory` fields — no capability/`IItemHandler` abstraction needed for the base case), **plus** every equipped Accessories slot when the Accessories mod is present (see below). For each stack found:
    - Skip if empty.
    - Skip if not damageable (`stack.isDamageableItem()`), not repairable (`stack.isRepairable()`), or already at full durability (`stack.getDamageValue() == 0`).
    - Skip if this is the player's current main-hand stack **and** `player.swinging` is true (avoids the same attack-animation edge case the original guards against).
@@ -71,9 +71,26 @@ Ported behavior from the real `RepairTalisman.java`, plus an XP cost layered on 
 
 No support for Alchemical Bags, Alchemical Chests, or Pedestals — those are ProjectE-specific container/multiblock systems this standalone mod doesn't have equivalents for, and are out of scope.
 
-### Config
+## Accessories Integration (soft dependency)
 
-Per-loader native config (NeoForge `ModConfigSpec`, Fabric a simple JSON config), both exposing:
+[wisp-forest/accessories](https://github.com/wisp-forest/accessories) is the modern Fabric+NeoForge trinket/accessory API (successor to Curios). Support is a **soft/optional dependency** — the mod works fully without Accessories installed, and gains equipped-accessory repair when it is.
+
+- Both mods add Accessories as compile-only (`modCompileOnly` on Fabric, `compileOnly` on NeoForge) against `io.wispforest:accessories-fabric` / `io.wispforest:accessories-neoforge` (from `maven.wispforest.io`) — never a hard runtime dependency.
+- All direct references to Accessories classes live in one isolated helper class per mod (e.g. `AccessoriesIntegration`), never touched unless a presence check passes first (`FabricLoader.getInstance().isModLoaded("accessories")` on Fabric, `ModList.get().isLoaded("accessories")` on NeoForge) — same isolation technique used for the Cloth Config screen below, so referencing an absent mod's classes never throws `NoClassDefFoundError`.
+- When present: step 4 of the repair scan additionally calls `AccessoriesCapability.get(player)` (null-safe) and iterates `.getAllEquipped()`, applying the same eligibility checks (damageable, repairable, damaged) to each equipped accessory's stack. No main-hand swing exception applies to these (they're not held).
+
+## ModMenu + Config Screen
+
+Both mods use `net.neoforged.neoforge.common.ModConfigSpec` for config, giving a single config-definition style across both projects (source duplicated between the two mods, consistent with the "two separate mods" decision — not a shared module).
+
+- **NeoForge**: `ModConfigSpec` is native to NeoForge. Registering it automatically gets a "Config" button in the mod list screen — no extra code or dependency needed.
+- **Fabric**: `ModConfigSpec` isn't native, so Fabric adds [Forge Config API Port](https://github.com/Fuzss/forgeconfigapiport) (`fuzs.forgeconfigapiport:forgeconfigapiport-fabric`, `modImplementation` — a real runtime dependency, this one's required) which implements the same `ModConfigSpec` class under Fabric, backed by a real config file on disk.
+- **Fabric config screen**: [ModMenu](https://github.com/TerraformersMC/ModMenu) + [Cloth Config](https://github.com/shedaniel/cloth-config) integration, both `modCompileOnly` (soft/optional, exactly mirroring the pattern in `cobblemon-autobattle`):
+  - `ModMenuIntegration implements ModMenuApi`, registered via the `"modmenu"` entrypoint in `fabric.mod.json`.
+  - `getModConfigScreenFactory()` checks Cloth Config's presence via `Class.forName(...)` before referencing any of its classes; returns `parent -> null` if absent, otherwise a factory building a Cloth Config screen with one entry per config value (`cooldownTicks`, `xpLevelCost`).
+  - NeoForge needs none of this — its config screen is automatic.
+
+### Config
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -91,3 +108,8 @@ Minecraft mod logic isn't practically unit-testable in isolation (needs a runnin
 5. Confirm XP drains at the configured rate, and repairs pause (without erroring) when XP is insufficient, resuming once XP is available again.
 6. Confirm `xpLevelCost = 0` repairs for free with no XP change.
 7. Confirm the main-hand item is skipped mid-swing (attack an entity while wielding a damaged weapon and watch it not repair on that exact tick).
+8. With Accessories **not** installed: confirm both mods still load and repair main inv/armor/offhand normally (no crash, no missing-class errors).
+9. With Accessories installed: equip a damaged item in an accessory slot and confirm it repairs on the same cadence.
+10. Fabric only, ModMenu **not** installed: confirm the mod still loads (soft dependency).
+11. Fabric only, ModMenu + Cloth Config installed: open the config screen from ModMenu, change `cooldownTicks`/`xpLevelCost`, confirm the change persists to the config file and takes effect in-game.
+12. NeoForge: confirm the "Config" button in the mod list opens a working screen for the same two values, with no ModMenu involved.
