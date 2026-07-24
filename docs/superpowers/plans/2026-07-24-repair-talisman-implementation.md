@@ -260,7 +260,7 @@ cp ~/talismanofrepair/assets/talisman_of_repair.png \
 ```
 Path: `fabric/src/main/resources/assets/talismanofrepair/models/item/talisman_of_repair.json`
 
-- [ ] **Step 4: Write the lang file**
+- [ ] **Step 3: Write the lang file**
 
 ```json
 {
