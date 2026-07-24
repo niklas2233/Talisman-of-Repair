@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "talismanofrepair",
+  "version": "1.0.0",
+  "name": "Talisman of Repair",
+  "description": "Adds an item that automatically repairs your gear over time.",
+  "authors": ["niklas2233"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.niklas2233.talismanofrepair.TalismanOfRepair"],
+    "modmenu": ["com.niklas2233.talismanofrepair.client.ModMenuIntegration"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "1.21.1",
+    "java": ">=21",
+    "fabric-api": "*",
+    "forgeconfigapiport": "*"
+  }
+}
