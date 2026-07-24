@@ -230,8 +230,7 @@ git commit -m "Scaffold Fabric mod project"
 ### Task 2: Fabric item, texture, recipe, registration
 
 **Files:**
-- Create: `tools/gen_icon.py`
-- Create: `fabric/src/main/resources/assets/talismanofrepair/textures/item/talisman_of_repair.png` (generated)
+- Create: `fabric/src/main/resources/assets/talismanofrepair/textures/item/talisman_of_repair.png` (copied from the project's real texture)
 - Create: `fabric/src/main/resources/assets/talismanofrepair/models/item/talisman_of_repair.json`
 - Create: `fabric/src/main/resources/assets/talismanofrepair/lang/en_us.json`
 - Create: `fabric/src/main/resources/data/talismanofrepair/recipe/talisman_of_repair.json`
@@ -241,61 +240,15 @@ git commit -m "Scaffold Fabric mod project"
 - Consumes: `TalismanOfRepair.MOD_ID` (Task 1).
 - Produces: `TalismanOfRepair.TALISMAN_OF_REPAIR` (a plain `net.minecraft.world.item.Item` instance registered in `BuiltInRegistries.ITEM`), used by Task 3 (repair logic gets attached directly to this item's class) and Task 5 (Accessories/ModMenu reference it indirectly via config only, no direct dependency).
 
-- [ ] **Step 1: Write the placeholder icon generator (pure stdlib, no PIL)**
-
-```python
-# tools/gen_icon.py
-import struct
-import sys
-import zlib
-
-def make_png(path):
-    size = 16
-    cx = cy = size / 2 - 0.5
-    purple = (147, 74, 214, 255)
-    outline = (86, 38, 138, 255)
-    highlight = (200, 150, 240, 255)
-    pixels = []
-    for y in range(size):
-        row = bytearray([0])  # filter byte: none
-        for x in range(size):
-            dx, dy = abs(x - cx), abs(y - cy)
-            dist = (dx / (size * 0.42)) + (dy / (size * 0.42))
-            if dist <= 0.85:
-                color = highlight if (x < cx and y < cy and dist < 0.5) else purple
-            elif dist <= 1.0:
-                color = outline
-            else:
-                color = (0, 0, 0, 0)
-            row.extend(color)
-        pixels.append(bytes(row))
-    raw = b"".join(pixels)
-
-    def chunk(tag, data):
-        return (struct.pack(">I", len(data)) + tag + data +
-                struct.pack(">I", zlib.crc32(tag + data)))
-
-    sig = b"\x89PNG\r\n\x1a\n"
-    ihdr = struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)
-    idat = zlib.compress(raw, 9)
-    with open(path, "wb") as f:
-        f.write(sig)
-        f.write(chunk(b"IHDR", ihdr))
-        f.write(chunk(b"IDAT", idat))
-        f.write(chunk(b"IEND", b""))
-
-if __name__ == "__main__":
-    make_png(sys.argv[1])
-```
-
-- [ ] **Step 2: Generate the Fabric texture**
+- [ ] **Step 1: Copy the real texture into place (64x64, square, a multiple of 16 — renders correctly as a higher-res item icon)**
 
 ```bash
 mkdir -p ~/talismanofrepair/fabric/src/main/resources/assets/talismanofrepair/textures/item
-python3 ~/talismanofrepair/tools/gen_icon.py ~/talismanofrepair/fabric/src/main/resources/assets/talismanofrepair/textures/item/talisman_of_repair.png
+cp ~/talismanofrepair/assets/talisman_of_repair.png \
+   ~/talismanofrepair/fabric/src/main/resources/assets/talismanofrepair/textures/item/talisman_of_repair.png
 ```
 
-- [ ] **Step 3: Write the item model**
+- [ ] **Step 2: Write the item model**
 
 ```json
 {
@@ -316,7 +269,7 @@ Path: `fabric/src/main/resources/assets/talismanofrepair/models/item/talisman_of
 ```
 Path: `fabric/src/main/resources/assets/talismanofrepair/lang/en_us.json`
 
-- [ ] **Step 5: Write the recipe**
+- [ ] **Step 4: Write the recipe**
 
 ```json
 {
@@ -339,7 +292,7 @@ Path: `fabric/src/main/resources/assets/talismanofrepair/lang/en_us.json`
 ```
 Path: `fabric/src/main/resources/data/talismanofrepair/recipe/talisman_of_repair.json`
 
-- [ ] **Step 6: Register the item in `TalismanOfRepair.java`**
+- [ ] **Step 5: Register the item in `TalismanOfRepair.java`**
 
 ```java
 package com.niklas2233.talismanofrepair;
@@ -373,7 +326,7 @@ public class TalismanOfRepair implements ModInitializer {
 }
 ```
 
-- [ ] **Step 7: Add a placeholder `TalismanOfRepairItem` class (full repair logic comes in Task 3)**
+- [ ] **Step 6: Add a placeholder `TalismanOfRepairItem` class (full repair logic comes in Task 3)**
 
 ```java
 package com.niklas2233.talismanofrepair;
@@ -388,16 +341,16 @@ public class TalismanOfRepairItem extends Item {
 ```
 Path: `fabric/src/main/java/com/niklas2233/talismanofrepair/TalismanOfRepairItem.java`
 
-- [ ] **Step 8: Build and verify**
+- [ ] **Step 7: Build and verify**
 
 Run: `cd ~/talismanofrepair/fabric && ./gradlew build --console=plain`
 Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 cd ~/talismanofrepair
-git add tools/ fabric/
+git add fabric/
 git commit -m "Add Fabric talisman item, texture, recipe, and registration"
 ```
 

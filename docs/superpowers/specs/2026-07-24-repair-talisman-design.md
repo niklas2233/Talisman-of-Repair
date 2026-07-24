@@ -30,7 +30,7 @@ Each mod has its own `docs`-free source tree following that loader's standard mo
 
 ### Texture
 
-Generated placeholder 16×16 PNG (simple icon, flat design) at `assets/talismanofrepair/textures/item/talisman_of_repair.png`, plus a standard `item/generated` model JSON. Swappable later without code changes.
+64×64 PNG (an amulet with an anvil icon, provided by the user at `assets/talisman_of_repair.png`) at `assets/talismanofrepair/textures/item/talisman_of_repair.png` in each mod, plus a standard `item/generated` model JSON. 64 is a clean multiple of 16, so it renders as a crisp higher-resolution icon under vanilla's texture handling.
 
 ### Recipe
 
