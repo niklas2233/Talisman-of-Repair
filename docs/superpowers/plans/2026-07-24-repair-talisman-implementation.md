@@ -6,30 +6,30 @@
 
 **Architecture:** Two fully independent Gradle projects (`fabric/`, `neoforge/`) in this repo, no shared build tooling. Each duplicates the same item/repair/config/Accessories-compat logic in its own source tree, registered through that loader's native APIs.
 
-**Tech Stack:** Java 21, Minecraft 1.21.10, official Mojang mappings on both loaders.
+**Tech Stack:** Java 21, Minecraft 1.21.1, official Mojang mappings on both loaders.
 
 ## Global Constraints
 
-- Minecraft version: **1.21.10** (chosen because it's the newest version where Fabric API, NeoForge stable, ModMenu, Cloth Config, Forge Config API Port, and Accessories *all* have real releases — confirmed live against Modrinth/Maven on 2026-07-24).
-- Resource pack_format for this MC version: **88** (verified from a real 1.21.10 mod jar).
+- Minecraft version: **1.21.1** (per explicit correction — not 1.21.10). This is also the exact version ProjectE itself currently targets, which doubles as a live reference for every API detail below.
+- Resource pack_format for this MC version: **34** (verified from a real 1.21.1 mod jar).
 - Mod ID: `talismanofrepair`. Java package: `com.niklas2233.talismanofrepair`.
-- Mappings note: as of 1.21.10, both Fabric and NeoForge toolchains use the class name `net.minecraft.resources.Identifier` (NOT `ResourceLocation` — confirmed against live Fabric API and NeoForge source; Mojang's own proguard mapping still says `ResourceLocation` internally, but both loader toolchains rename it). Use `Identifier.fromNamespaceAndPath(ns, path)`.
-- `Item#inventoryTick` signature in 1.21.10 is `inventoryTick(ItemStack stack, ServerLevel level, Entity entity, @Nullable EquipmentSlot slot)` — confirmed against Mojang's official client mappings for 1.21.10 and a live mod's override (FrozenBlock/WilderWild). It is guaranteed server-side (param type is `ServerLevel`, not `Level`) and still fires for every stack in a player's inventory, not just equipped ones (`slot` is `null` for non-equipped stacks).
-- `ItemStack#isRepairable()` no longer exists in 1.21.10. The equivalent check is `stack.isDamaged() && !stack.has(DataComponents.UNBREAKABLE)`.
-- `ItemCooldowns#isOnCooldown` / `#addCooldown` now take an `ItemStack`, not an `Item` (confirmed against 1.21.10 official mappings).
-- `Inventory` no longer has separate `armor`/`offhand` fields — only `items` (main 36 slots). Equipped items (armor, offhand, mainhand) are read via `LivingEntity#getItemBySlot(EquipmentSlot)`, iterating `EquipmentSlot.values()`.
+- Class is `net.minecraft.resources.ResourceLocation` at this version (NOT `Identifier` — that rename is specific to much newer MC versions; confirmed against official 1.21.1 mappings and ProjectE's real 1.21.1 source). Use `ResourceLocation.fromNamespaceAndPath(ns, path)`.
+- `Item#inventoryTick` signature at 1.21.1 is the classic `inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean isHeld)` (confirmed against official 1.21.1 mappings and ProjectE's real `RepairTalisman.java`). It fires every tick for every stack in a player's inventory (main inventory, armor, offhand) regardless of loader — guard client-side manually with `!level.isClientSide()`.
+- `ItemStack#isRepairable()` exists on NeoForge (a NeoForge-only extension method, `IItemExtension`) but **not** on plain Fabric — don't use it. Use the portable vanilla check instead: `stack.isDamageableItem() && stack.getDamageValue() > 0 && !stack.has(DataComponents.UNBREAKABLE)`. Identical on both loaders.
+- `ItemCooldowns#isOnCooldown` / `#addCooldown` take an `Item` at this version (not `ItemStack` — that change is specific to newer MC versions). Confirmed against official 1.21.1 mappings and ProjectE's real `PlayerHelper.checkCooldown`.
+- `Inventory` has separate `items`, `armor`, `offhand` `NonNullList<ItemStack>` fields at this version (confirmed against official 1.21.1 mappings) — no need for `getItemBySlot`/`EquipmentSlot` iteration.
 - No unit tests: Minecraft mod logic requires a running game to exercise meaningfully. Each task's automated verification is **a successful Gradle build** (`BUILD SUCCESSFUL`, confirms compilation + resource validation against the real Minecraft/loader classpath). Manual smoke testing is documented in the spec's Testing section and is out of scope for this plan's automated checks.
-- Dependency versions (all verified live against Maven/Modrinth on 2026-07-24 for MC 1.21.10):
+- Dependency versions (all verified live against Maven/Modrinth/ProjectE's real build on 2026-07-25 for MC 1.21.1):
   - Fabric Loader: `0.19.3`
-  - Fabric API: `0.138.4+1.21.10`
+  - Fabric API: `0.116.14+1.21.1`
   - Fabric Loom plugin (`net.fabricmc.fabric-loom-remap`): `1.17-SNAPSHOT`
-  - NeoForge: `21.10.64`
-  - NeoForge ModDev Gradle plugin (`net.neoforged.moddev`): `2.0.142`
-  - Forge Config API Port (Fabric): `fuzs.forgeconfigapiport:forgeconfigapiport-fabric:21.10.1` + `fuzs.forgeconfigapiport:forgeconfigapiport-common-neoforgeapi:21.10.1`
-  - ModMenu: `com.terraformersmc:modmenu:16.0.1`
-  - Cloth Config: `me.shedaniel.cloth:cloth-config-fabric:20.0.149`
-  - Accessories: `io.wispforest:accessories-fabric:1.4.3-beta` / `io.wispforest:accessories-neoforge:1.4.3-beta`
-  - Gradle wrapper: `9.5.1` for the Fabric project, `8.14.5` for the NeoForge project (NeoForge's ModDev plugin documents 8.8+ as its baseline; pinning to the last 8.x avoids an untested Gradle-9 combination on that side, while Fabric's own live example mod already uses 9.5.1 successfully).
+  - NeoForge: `21.1.148` (ProjectE's own current pin — a proven-working version for this exact MC release)
+  - NeoForge ModDev Gradle plugin (`net.neoforged.moddev`): `2.0.78` (ProjectE's own current pin)
+  - Forge Config API Port (Fabric): `fuzs.forgeconfigapiport:forgeconfigapiport-fabric:21.1.6` + `fuzs.forgeconfigapiport:forgeconfigapiport-common-neoforgeapi:21.1.6`
+  - ModMenu: `com.terraformersmc:modmenu:11.0.4`
+  - Cloth Config: `me.shedaniel.cloth:cloth-config-fabric:15.0.140`
+  - Accessories: `io.wispforest:accessories-fabric:1.1.0-beta.53+1.21.1` / `io.wispforest:accessories-neoforge:1.1.0-beta.53+1.21.1`
+  - Gradle wrapper: `9.5.1` for the Fabric project (matches Fabric's own live 1.21.1 example-mod template), `8.12.1` for the NeoForge project (matches ProjectE's own current, proven-working pin).
 
 ---
 
@@ -94,18 +94,18 @@ org.gradle.jvmargs=-Xmx1G
 org.gradle.parallel=true
 org.gradle.configuration-cache=false
 
-minecraft_version=1.21.10
+minecraft_version=1.21.1
 loader_version=0.19.3
 loom_version=1.17-SNAPSHOT
 
 mod_version=1.0.0
 maven_group=com.niklas2233
 
-fabric_api_version=0.138.4+1.21.10
-fcap_version=21.10.1
-modmenu_version=16.0.1
-cloth_config_version=20.0.149
-accessories_version=1.4.3-beta
+fabric_api_version=0.116.14+1.21.1
+fcap_version=21.1.6
+modmenu_version=11.0.4
+cloth_config_version=15.0.140
+accessories_version=1.1.0-beta.53+1.21.1
 ```
 
 - [ ] **Step 6: Write `fabric/build.gradle`**
@@ -187,7 +187,7 @@ java {
   },
   "depends": {
     "fabricloader": ">=0.19.0",
-    "minecraft": "1.21.10",
+    "minecraft": "1.21.1",
     "java": ">=21",
     "fabric-api": "*",
     "forgeconfigapiport": "*"
@@ -346,8 +346,9 @@ package com.niklas2233.talismanofrepair;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.ItemLike;
@@ -360,8 +361,8 @@ public class TalismanOfRepair implements ModInitializer {
             new TalismanOfRepairItem(new Item.Properties().stacksTo(1)));
 
     private static <T extends Item> T register(String name, T item) {
-        return net.minecraft.core.Registry.register(
-                BuiltInRegistries.ITEM, Identifier.fromNamespaceAndPath(MOD_ID, name), item);
+        return Registry.register(
+                BuiltInRegistries.ITEM, ResourceLocation.fromNamespaceAndPath(MOD_ID, name), item);
     }
 
     @Override
@@ -419,14 +420,12 @@ git commit -m "Add Fabric talisman item, texture, recipe, and registration"
 package com.niklas2233.talismanofrepair;
 
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.level.Level;
 
 import java.util.function.BiConsumer;
 
@@ -436,12 +435,12 @@ public class TalismanOfRepairItem extends Item {
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, ServerLevel level, Entity entity, @Nullable EquipmentSlot slot) {
-        super.inventoryTick(stack, level, entity, slot);
-        if (!(entity instanceof Player player)) {
+    public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean isHeld) {
+        super.inventoryTick(stack, level, entity, slot, isHeld);
+        if (level.isClientSide() || !(entity instanceof Player player)) {
             return;
         }
-        if (!checkCooldown(player, stack)) {
+        if (!checkCooldown(player)) {
             return;
         }
         if (!chargeXp(player)) {
@@ -450,17 +449,17 @@ public class TalismanOfRepairItem extends Item {
         repairAll(player);
     }
 
-    private boolean checkCooldown(Player player, ItemStack stack) {
+    private boolean checkCooldown(Player player) {
         int cooldownTicks = RepairConfig.cooldownTicks();
         if (cooldownTicks == -1) {
             return false;
         }
         ItemCooldowns cooldowns = player.getCooldowns();
-        if (cooldowns.isOnCooldown(stack)) {
+        if (cooldowns.isOnCooldown(this)) {
             return false;
         }
         if (cooldownTicks > 0) {
-            cooldowns.addCooldown(stack, cooldownTicks);
+            cooldowns.addCooldown(this, cooldownTicks);
         }
         return true;
     }
@@ -482,14 +481,18 @@ public class TalismanOfRepairItem extends Item {
         for (ItemStack invStack : player.getInventory().items) {
             repair.accept(invStack, player);
         }
-        for (EquipmentSlot slot : EquipmentSlot.values()) {
-            repair.accept(player.getItemBySlot(slot), player);
+        for (ItemStack armorStack : player.getInventory().armor) {
+            repair.accept(armorStack, player);
+        }
+        for (ItemStack offhandStack : player.getInventory().offhand) {
+            repair.accept(offhandStack, player);
         }
         AccessoriesCompat.repairEquipped(player, repair);
     }
 
     private static void tryRepair(ItemStack stack, Player player) {
-        if (stack.isEmpty() || !stack.isDamaged() || stack.has(DataComponents.UNBREAKABLE)) {
+        if (stack.isEmpty() || !stack.isDamageableItem() || stack.getDamageValue() <= 0
+                || stack.has(DataComponents.UNBREAKABLE)) {
             return;
         }
         if (stack == player.getMainHandItem() && player.swinging) {
@@ -762,12 +765,12 @@ This completes the Fabric mod.
 **Interfaces:**
 - Produces: `TalismanOfRepair` class (`@Mod("talismanofrepair")`), `MOD_ID` constant, `ITEMS` `DeferredRegister.Items` — used by Task 7.
 
-- [ ] **Step 1: Download a temporary Gradle 8.14.5 distribution to bootstrap the wrapper**
+- [ ] **Step 1: Download a temporary Gradle 8.12.1 distribution to bootstrap the wrapper**
 
 ```bash
 cd /tmp/claude-1000/-home-niklas-claude/00e2ff2f-f53c-45f1-84fb-b399be547418/scratchpad
-curl -sL -o gradle-8.14.5-bin.zip https://services.gradle.org/distributions/gradle-8.14.5-bin.zip
-unzip -q gradle-8.14.5-bin.zip
+curl -sL -o gradle-8.12.1-bin.zip https://services.gradle.org/distributions/gradle-8.12.1-bin.zip
+unzip -q gradle-8.12.1-bin.zip
 ```
 
 - [ ] **Step 2: Create the NeoForge project directory and generate the wrapper**
@@ -775,13 +778,13 @@ unzip -q gradle-8.14.5-bin.zip
 ```bash
 mkdir -p ~/talismanofrepair/neoforge
 cd ~/talismanofrepair/neoforge
-/tmp/claude-1000/-home-niklas-claude/00e2ff2f-f53c-45f1-84fb-b399be547418/scratchpad/gradle-8.14.5/bin/gradle wrapper --gradle-version 8.14.5
+/tmp/claude-1000/-home-niklas-claude/00e2ff2f-f53c-45f1-84fb-b399be547418/scratchpad/gradle-8.12.1/bin/gradle wrapper --gradle-version 8.12.1
 ```
 
 - [ ] **Step 3: Clean up the temporary Gradle distribution**
 
 ```bash
-rm -rf /tmp/claude-1000/-home-niklas-claude/00e2ff2f-f53c-45f1-84fb-b399be547418/scratchpad/gradle-8.14.5 /tmp/claude-1000/-home-niklas-claude/00e2ff2f-f53c-45f1-84fb-b399be547418/scratchpad/gradle-8.14.5-bin.zip
+rm -rf /tmp/claude-1000/-home-niklas-claude/00e2ff2f-f53c-45f1-84fb-b399be547418/scratchpad/gradle-8.12.1 /tmp/claude-1000/-home-niklas-claude/00e2ff2f-f53c-45f1-84fb-b399be547418/scratchpad/gradle-8.12.1-bin.zip
 ```
 
 - [ ] **Step 4: Write `neoforge/settings.gradle`**
@@ -816,17 +819,17 @@ org.gradle.jvmargs=-Xmx2G
 mod_version=1.0.0
 maven_group=com.niklas2233
 
-minecraft_version=1.21.10
-neoforge_version=21.10.64
+minecraft_version=1.21.1
+neoforge_version=21.1.148
 
-accessories_version=1.4.3-beta
+accessories_version=1.1.0-beta.53+1.21.1
 ```
 
 - [ ] **Step 6: Write `neoforge/build.gradle`**
 
 ```groovy
 plugins {
-	id 'net.neoforged.moddev' version '2.0.142'
+	id 'net.neoforged.moddev' version '2.0.78'
 }
 
 version = project.mod_version
@@ -880,7 +883,7 @@ processResources {
 {
   "pack": {
     "description": "Talisman of Repair resources",
-    "pack_format": 88
+    "pack_format": 34
   }
 }
 ```
@@ -903,7 +906,7 @@ description = "Adds an item that automatically repairs your gear over time."
 modId = "neoforge"
 mandatory = true
 type = "required"
-versionRange = "[21.10.0,)"
+versionRange = "[21.1.1,)"
 ordering = "NONE"
 side = "BOTH"
 
@@ -911,7 +914,7 @@ side = "BOTH"
 modId = "minecraft"
 mandatory = true
 type = "required"
-versionRange = "[1.21.10,1.21.11)"
+versionRange = "[1.21.1]"
 ordering = "NONE"
 side = "BOTH"
 ```
@@ -1103,14 +1106,12 @@ git commit -m "Add NeoForge talisman item, assets, recipe, and registration"
 package com.niklas2233.talismanofrepair;
 
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.level.Level;
 
 import java.util.function.BiConsumer;
 
@@ -1120,12 +1121,12 @@ public class TalismanOfRepairItem extends Item {
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, ServerLevel level, Entity entity, @Nullable EquipmentSlot slot) {
-        super.inventoryTick(stack, level, entity, slot);
-        if (!(entity instanceof Player player)) {
+    public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean isHeld) {
+        super.inventoryTick(stack, level, entity, slot, isHeld);
+        if (level.isClientSide() || !(entity instanceof Player player)) {
             return;
         }
-        if (!checkCooldown(player, stack)) {
+        if (!checkCooldown(player)) {
             return;
         }
         if (!chargeXp(player)) {
@@ -1134,17 +1135,17 @@ public class TalismanOfRepairItem extends Item {
         repairAll(player);
     }
 
-    private boolean checkCooldown(Player player, ItemStack stack) {
+    private boolean checkCooldown(Player player) {
         int cooldownTicks = RepairConfig.cooldownTicks();
         if (cooldownTicks == -1) {
             return false;
         }
         ItemCooldowns cooldowns = player.getCooldowns();
-        if (cooldowns.isOnCooldown(stack)) {
+        if (cooldowns.isOnCooldown(this)) {
             return false;
         }
         if (cooldownTicks > 0) {
-            cooldowns.addCooldown(stack, cooldownTicks);
+            cooldowns.addCooldown(this, cooldownTicks);
         }
         return true;
     }
@@ -1166,14 +1167,18 @@ public class TalismanOfRepairItem extends Item {
         for (ItemStack invStack : player.getInventory().items) {
             repair.accept(invStack, player);
         }
-        for (EquipmentSlot slot : EquipmentSlot.values()) {
-            repair.accept(player.getItemBySlot(slot), player);
+        for (ItemStack armorStack : player.getInventory().armor) {
+            repair.accept(armorStack, player);
+        }
+        for (ItemStack offhandStack : player.getInventory().offhand) {
+            repair.accept(offhandStack, player);
         }
         AccessoriesCompat.repairEquipped(player, repair);
     }
 
     private static void tryRepair(ItemStack stack, Player player) {
-        if (stack.isEmpty() || !stack.isDamaged() || stack.has(DataComponents.UNBREAKABLE)) {
+        if (stack.isEmpty() || !stack.isDamageableItem() || stack.getDamageValue() <= 0
+                || stack.has(DataComponents.UNBREAKABLE)) {
             return;
         }
         if (stack == player.getMainHandItem() && player.swinging) {
@@ -1360,7 +1365,7 @@ Expected: at least one non-`-sources`, non-`-dev` jar per project.
 ```markdown
 # Talisman of Repair
 
-An item that automatically repairs your gear over time, for Minecraft 1.21.10.
+An item that automatically repairs your gear over time, for Minecraft 1.21.1.
 
 - `fabric/` — Fabric + Fabric API build
 - `neoforge/` — NeoForge build
@@ -1370,7 +1375,7 @@ Both are independent Gradle projects; build each with its own `./gradlew build`.
 ## Behavior
 
 - Repairs 1 durability point every `cooldownTicks` (default 20, `-1` disables) across your
-  main inventory, all equipped slots, and equipped Accessories (if installed).
+  main inventory, armor, offhand, and equipped Accessories (if installed).
 - Costs `xpLevelCost` XP levels per repair pass (default 1, `0` = free).
 - Configurable in-game: ModMenu + Cloth Config on Fabric, the native "Config" screen on NeoForge.
 
