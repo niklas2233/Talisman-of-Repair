@@ -120,7 +120,7 @@ group = project.maven_group
 
 repositories {
 	maven { url = 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven/' }
-	maven { url = 'https://maven.terraformersmc.com/releases' }
+	maven { url = 'https://maven.terraformersmc.com/' }
 	maven { url = 'https://maven.shedaniel.me/' }
 	maven { url = 'https://maven.wispforest.io/releases' }
 	maven { url = 'https://maven.su5ed.dev/releases' }
