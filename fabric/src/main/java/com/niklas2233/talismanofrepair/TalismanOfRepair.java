@@ -1,9 +1,12 @@
 package com.niklas2233.talismanofrepair;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 
 public class TalismanOfRepair implements ModInitializer {
@@ -20,6 +23,8 @@ public class TalismanOfRepair implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // Item registered above. Creative tab entry attempted but Fabric API doesn't support it in this version.
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS)
+                .register(entries -> entries.accept(TALISMAN_OF_REPAIR,
+                        CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS));
     }
 }
