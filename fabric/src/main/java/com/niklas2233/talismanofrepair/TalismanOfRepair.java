@@ -8,6 +8,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.neoforged.fml.config.ConfigTracker;
+import net.neoforged.fml.config.ModConfig;
 
 public class TalismanOfRepair implements ModInitializer {
     public static final String MOD_ID = "talismanofrepair";
@@ -23,6 +25,9 @@ public class TalismanOfRepair implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        ConfigTracker.INSTANCE.registerConfig(
+                ModConfig.Type.COMMON, RepairConfig.SPEC, MOD_ID);
+
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS)
                 .register(entries -> entries.accept(TALISMAN_OF_REPAIR,
                         CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS));
