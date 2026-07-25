@@ -1,0 +1,26 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MIT"
+
+[[mods]]
+modId = "talismanofrepair"
+version = "${version}"
+displayName = "Talisman of Repair"
+authors = "niklas2233"
+description = "Adds an item that automatically repairs your gear over time."
+
+[[dependencies.talismanofrepair]]
+modId = "neoforge"
+mandatory = true
+type = "required"
+versionRange = "[21.1.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.talismanofrepair]]
+modId = "minecraft"
+mandatory = true
+type = "required"
+versionRange = "[1.21.1]"
+ordering = "NONE"
+side = "BOTH"

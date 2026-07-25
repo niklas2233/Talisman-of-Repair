@@ -1,0 +1,47 @@
+plugins {
+	id 'net.neoforged.moddev' version '2.0.78'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+repositories {
+	maven { url = 'https://maven.wispforest.io/releases' }
+	maven { url = 'https://maven.su5ed.dev/releases' }
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+neoForge {
+	version = project.neoforge_version
+
+	runs {
+		client {
+			client()
+		}
+		server {
+			server()
+		}
+	}
+
+	mods {
+		talismanofrepair {
+			sourceSet sourceSets.main
+		}
+	}
+}
+
+dependencies {
+	compileOnly "io.wispforest:accessories-neoforge:${project.accessories_version}"
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+	filesMatching("META-INF/neoforge.mods.toml") {
+		expand "version": version
+	}
+}
