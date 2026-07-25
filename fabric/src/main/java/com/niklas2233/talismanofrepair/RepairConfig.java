@@ -28,4 +28,12 @@ public final class RepairConfig {
     public static int xpLevelCost() {
         return XP_LEVEL_COST.get();
     }
+
+    public static void setCooldownTicks(int value) {
+        COOLDOWN_TICKS.set(value);
+    }
+
+    public static void setXpLevelCost(int value) {
+        XP_LEVEL_COST.set(value);
+    }
 }
