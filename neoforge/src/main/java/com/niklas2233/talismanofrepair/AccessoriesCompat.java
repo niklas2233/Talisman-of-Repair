@@ -17,4 +17,10 @@ public final class AccessoriesCompat {
             AccessoriesRepair.repairEquipped(player, repair);
         }
     }
+
+    public static void registerAccessoryTick() {
+        if (LOADED) {
+            AccessoriesRepair.registerTicking();
+        }
+    }
 }

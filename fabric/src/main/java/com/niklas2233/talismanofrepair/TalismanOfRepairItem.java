@@ -21,6 +21,10 @@ public class TalismanOfRepairItem extends Item {
         if (level.isClientSide() || !(entity instanceof Player player)) {
             return;
         }
+        runRepairPass(player);
+    }
+
+    void runRepairPass(Player player) {
         if (!checkCooldown(player)) {
             return;
         }

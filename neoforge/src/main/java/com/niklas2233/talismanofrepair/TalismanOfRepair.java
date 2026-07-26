@@ -6,6 +6,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -22,6 +23,11 @@ public class TalismanOfRepair {
         ITEMS.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, RepairConfig.SPEC);
         modEventBus.addListener(this::addCreative);
+        modEventBus.addListener(this::commonSetup);
+    }
+
+    private void commonSetup(FMLCommonSetupEvent event) {
+        AccessoriesCompat.registerAccessoryTick();
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {

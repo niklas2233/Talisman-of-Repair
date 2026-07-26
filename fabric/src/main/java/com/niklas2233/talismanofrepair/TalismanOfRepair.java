@@ -28,6 +28,8 @@ public class TalismanOfRepair implements ModInitializer {
         ConfigTracker.INSTANCE.registerConfig(
                 ModConfig.Type.COMMON, RepairConfig.SPEC, MOD_ID);
 
+        AccessoriesCompat.registerAccessoryTick();
+
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS)
                 .register(entries -> entries.accept(TALISMAN_OF_REPAIR,
                         CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS));
