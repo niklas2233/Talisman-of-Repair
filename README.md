@@ -17,3 +17,10 @@ Both are independent Gradle projects; build each with its own `./gradlew build`.
   main inventory, armor, offhand, and equipped Accessories (if installed).
 - Costs `xpLevelCost` XP levels per repair pass (default 1, `0` = free).
 - Configurable in-game: ModMenu + Cloth Config on Fabric, the native "Config" screen on NeoForge.
+
+## Accessories Support
+
+Optional soft dependency on [Accessories](https://github.com/wisp-forest/accessories). If it's
+installed, the talisman can be worn in any accessory slot (not just carried in your inventory)
+and keeps repairing your gear from there. Without Accessories installed, the mod works exactly
+the same, just without that extra slot flexibility.
