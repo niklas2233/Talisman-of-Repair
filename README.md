@@ -2,7 +2,9 @@
 
 <img src="assets/talisman_of_repair.png" alt="Talisman of Repair icon" width="64" height="64">
 
-An item that automatically repairs your gear over time, for Minecraft 1.21.1.
+An item that automatically repairs your gear over time, for Minecraft 1.21.1. Inspired by
+[ProjectE](https://github.com/sinkillerj/ProjectE)'s Talisman of Repair, rebuilt here as a
+standalone mod with no ProjectE dependency.
 
 - `fabric/` — Fabric + Fabric API build
 - `neoforge/` — NeoForge build
