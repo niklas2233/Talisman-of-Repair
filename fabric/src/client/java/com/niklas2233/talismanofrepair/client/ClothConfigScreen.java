@@ -24,10 +24,10 @@ final class ClothConfigScreen {
                 .build());
 
         general.addEntry(entryBuilder
-                .startIntField(Component.literal("XP Level Cost"), RepairConfig.xpLevelCost())
+                .startIntField(Component.literal("XP Cost"), RepairConfig.xpCost())
                 .setDefaultValue(1)
                 .setMin(0)
-                .setSaveConsumer(RepairConfig::setXpLevelCost)
+                .setSaveConsumer(RepairConfig::setXpCost)
                 .build());
 
         builder.setSavingRunnable(() -> RepairConfig.SPEC.save());

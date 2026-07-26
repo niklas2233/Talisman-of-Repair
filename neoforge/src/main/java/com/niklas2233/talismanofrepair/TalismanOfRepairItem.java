@@ -4,13 +4,18 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 
 public class TalismanOfRepairItem extends Item {
+    // ponytail: internal throttle, not a real item cooldown — avoids vanilla's white cooldown-overlay bar
+    private final Map<UUID, Long> nextRepairTick = new HashMap<>();
+
     public TalismanOfRepairItem(Properties properties) {
         super(properties);
     }
@@ -39,25 +44,27 @@ public class TalismanOfRepairItem extends Item {
         if (cooldownTicks == -1) {
             return false;
         }
-        ItemCooldowns cooldowns = player.getCooldowns();
-        if (cooldowns.isOnCooldown(this)) {
+        if (cooldownTicks == 0) {
+            return true;
+        }
+        long now = player.level().getGameTime();
+        Long next = nextRepairTick.get(player.getUUID());
+        if (next != null && now < next) {
             return false;
         }
-        if (cooldownTicks > 0) {
-            cooldowns.addCooldown(this, cooldownTicks);
-        }
+        nextRepairTick.put(player.getUUID(), now + cooldownTicks);
         return true;
     }
 
     private boolean chargeXp(Player player) {
-        int cost = RepairConfig.xpLevelCost();
+        int cost = RepairConfig.xpCost();
         if (cost <= 0) {
             return true;
         }
-        if (player.experienceLevel < cost) {
+        if (player.totalExperience < cost) {
             return false;
         }
-        player.giveExperienceLevels(-cost);
+        player.giveExperiencePoints(-cost);
         return true;
     }
 
