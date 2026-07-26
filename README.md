@@ -1,5 +1,7 @@
 # Talisman of Repair
 
+<img src="assets/talisman_of_repair.png" alt="Talisman of Repair icon" width="64" height="64">
+
 An item that automatically repairs your gear over time, for Minecraft 1.21.1.
 
 - `fabric/` — Fabric + Fabric API build
@@ -13,6 +15,3 @@ Both are independent Gradle projects; build each with its own `./gradlew build`.
   main inventory, armor, offhand, and equipped Accessories (if installed).
 - Costs `xpLevelCost` XP levels per repair pass (default 1, `0` = free).
 - Configurable in-game: ModMenu + Cloth Config on Fabric, the native "Config" screen on NeoForge.
-
-See `docs/superpowers/specs/2026-07-24-repair-talisman-design.md` for the full design and
-`docs/superpowers/plans/2026-07-24-repair-talisman-implementation.md` for the build plan.
